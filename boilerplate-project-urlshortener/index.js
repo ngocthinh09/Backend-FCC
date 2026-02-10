@@ -29,7 +29,12 @@ let numUrl = 1;
 app.post('/api/shorturl', (req, res) => {
   const originalUrl = req.body.url;
   const parsedUrl = urlParser.parse(originalUrl);
-  
+
+  const protocolRegex = /^https?:\/\/(.*)/;
+  if (!protocolRegex.test(originalUrl)) {
+    return res.json({ error: 'invalid url' });
+  }
+
   dns.lookup(parsedUrl.hostname, (err) => {
     if (err)
       return res.json({ error: 'invalid url' });
@@ -46,10 +51,8 @@ app.post('/api/shorturl', (req, res) => {
 
 app.get('/api/shorturl/:shortUrl', (req, res) => {
   const shortUrl = parseInt(req.params.shortUrl);
-  const foundUrl = urlDatabase.find((value) => (value.short_url === shortUrl));
-  if (foundUrl)
-    res.redirect(foundUrl.original_url);
-  else res.json({ error: "No short URL found" })
+  const foundUrl = urlDatabase[shortUrl - 1];
+  res.redirect(foundUrl.original_url);
 });
 
 app.listen(port, function() {
